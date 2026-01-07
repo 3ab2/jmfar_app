@@ -1,17 +1,15 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
+  template: '<router-outlet></router-outlet>',
+  styles: []
 })
 export class App {
-  protected readonly title = signal('frontend');
-  
   constructor() {
-    // RouterOutlet is now used in app.html for routing
+    console.log('App component constructor called!');
   }
 }

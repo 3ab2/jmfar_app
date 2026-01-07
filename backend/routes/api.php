@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\VilleController;
 use App\Http\Controllers\Api\FichierController;
 use App\Http\Controllers\Api\TypeEvenementController;
 use App\Http\Controllers\Api\SousTypeEvenementController;
+use App\Http\Controllers\Api\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,6 +26,11 @@ use App\Http\Controllers\Api\SousTypeEvenementController;
 Route::get('/ping', function () {
     return response()->json(['status' => 'ok']);
 });
+
+// Authentication routes
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout']);
+Route::get('/profile', [AuthController::class, 'profile']);
 
 // API Resource Routes
 Route::apiResource('armes', ArmeController::class);

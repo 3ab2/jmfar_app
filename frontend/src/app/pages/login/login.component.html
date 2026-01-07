@@ -1,6 +1,11 @@
 <div class="login-container">
   <div class="login-form">
     <h2>Login</h2>
+    
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+    
     <form (ngSubmit)="onSubmit()">
       <div class="form-group">
         <label for="email">Email:</label>
@@ -11,6 +16,7 @@
           [(ngModel)]="email" 
           required 
           email
+          [disabled]="isLoading"
         />
       </div>
       
@@ -22,10 +28,14 @@
           name="password" 
           [(ngModel)]="password" 
           required
+          [disabled]="isLoading"
         />
       </div>
       
-      <button type="submit" class="login-btn">Login</button>
+      <button type="submit" class="login-btn" [disabled]="isLoading">
+        <span *ngIf="!isLoading">Login</span>
+        <span *ngIf="isLoading">Connexion en cours...</span>
+      </button>
     </form>
   </div>
 </div>

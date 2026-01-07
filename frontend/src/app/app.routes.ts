@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './pages/login/login.component';
+import { AuthGuard } from './guards/auth.guard';
 import { ArmesListComponent } from './pages/armes/armes-list.component';
 import { ArmeCreateComponent } from './pages/armes/arme-create.component';
 import { ArmeEditComponent } from './pages/armes/arme-edit.component';
@@ -44,44 +45,44 @@ export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   
   // Armes routes (existing)
-  { path: 'armes', component: ArmesListComponent },
-  { path: 'armes/create', component: ArmeCreateComponent },
-  { path: 'armes/edit/:id', component: ArmeEditComponent },
+  { path: 'armes', component: ArmesListComponent, canActivate: [AuthGuard] },
+  { path: 'armes/create', component: ArmeCreateComponent, canActivate: [AuthGuard] },
+  { path: 'armes/edit/:id', component: ArmeEditComponent, canActivate: [AuthGuard] },
   
   // TypeEvenement routes
-  { path: 'type-evenements', component: TypeEvenementsListComponent },
-  { path: 'type-evenements/create', component: TypeEvenementCreateComponent },
-  { path: 'type-evenements/edit/:id', component: TypeEvenementEditComponent },
+  { path: 'type-evenements', component: TypeEvenementsListComponent, canActivate: [AuthGuard] },
+  { path: 'type-evenements/create', component: TypeEvenementCreateComponent, canActivate: [AuthGuard] },
+  { path: 'type-evenements/edit/:id', component: TypeEvenementEditComponent, canActivate: [AuthGuard] },
   
   // SousTypeEvenement routes
-  { path: 'sous-type-evenements', component: SousTypeEvenementsListComponent },
-  { path: 'sous-type-evenements/create', component: SousTypeEvenementCreateComponent },
-  { path: 'sous-type-evenements/edit/:id', component: SousTypeEvenementEditComponent },
+  { path: 'sous-type-evenements', component: SousTypeEvenementsListComponent, canActivate: [AuthGuard] },
+  { path: 'sous-type-evenements/create', component: SousTypeEvenementCreateComponent, canActivate: [AuthGuard] },
+  { path: 'sous-type-evenements/edit/:id', component: SousTypeEvenementEditComponent, canActivate: [AuthGuard] },
   
   // Evenement routes
-  { path: 'evenements', component: EvenementsListComponent },
-  { path: 'evenements/create', component: EvenementCreateComponent },
-  { path: 'evenements/edit/:id', component: EvenementEditComponent },
+  { path: 'evenements', component: EvenementsListComponent, canActivate: [AuthGuard] },
+  { path: 'evenements/create', component: EvenementCreateComponent, canActivate: [AuthGuard] },
+  { path: 'evenements/edit/:id', component: EvenementEditComponent, canActivate: [AuthGuard] },
   
   // Fichier routes
-  { path: 'fichiers', component: FichiersListComponent },
-  { path: 'fichiers/create', component: FichierCreateComponent },
-  { path: 'fichiers/edit/:id', component: FichierEditComponent },
+  { path: 'fichiers', component: FichiersListComponent, canActivate: [AuthGuard] },
+  { path: 'fichiers/create', component: FichierCreateComponent, canActivate: [AuthGuard] },
+  { path: 'fichiers/edit/:id', component: FichierEditComponent, canActivate: [AuthGuard] },
   
   // Utilisateur routes
-  { path: 'utilisateurs', component: UtilisateursListComponent },
-  { path: 'utilisateurs/create', component: UtilisateurCreateComponent },
-  { path: 'utilisateurs/edit/:id', component: UtilisateurEditComponent },
+  { path: 'utilisateurs', component: UtilisateursListComponent, canActivate: [AuthGuard] },
+  { path: 'utilisateurs/create', component: UtilisateurCreateComponent, canActivate: [AuthGuard] },
+  { path: 'utilisateurs/edit/:id', component: UtilisateurEditComponent, canActivate: [AuthGuard] },
   
   // Pay routes
-  { path: 'pays', component: PaysListComponent },
-  { path: 'pays/create', component: PayCreateComponent },
-  { path: 'pays/edit/:id', component: PayEditComponent },
+  { path: 'pays', component: PaysListComponent, canActivate: [AuthGuard] },
+  { path: 'pays/create', component: PayCreateComponent, canActivate: [AuthGuard] },
+  { path: 'pays/edit/:id', component: PayEditComponent, canActivate: [AuthGuard] },
   
   // Ville routes
-  { path: 'villes', component: VillesListComponent },
-  { path: 'villes/create', component: VilleCreateComponent },
-  { path: 'villes/edit/:id', component: VilleEditComponent },
+  { path: 'villes', component: VillesListComponent, canActivate: [AuthGuard] },
+  { path: 'villes/create', component: VilleCreateComponent, canActivate: [AuthGuard] },
+  { path: 'villes/edit/:id', component: VilleEditComponent, canActivate: [AuthGuard] },
   
   { path: '**', redirectTo: '/login' }
 ];

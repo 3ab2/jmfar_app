@@ -1,0 +1,253 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { FichierService } from '../../services/fichier.service';
+import { Fichier } from '../../models';
+
+@Component({
+  selector: 'app-fichiers-list',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div class="container">
+      <div class="header">
+        <h2>Fichiers</h2>
+        <button class="btn btn-primary" (click)="createNew()">Nouveau Fichier</button>
+      </div>
+      
+      <div class="loading" *ngIf="loading">Chargement...</div>
+      
+      <div class="error" *ngIf="error">{{ error }}</div>
+      
+      <div class="table-container" *ngIf="!loading && !error">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nom</th>
+              <th>Type</th>
+              <th>Taille</th>
+              <th>Créé le</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let fichier of fichiers">
+              <td>{{ fichier.id }}</td>
+              <td>{{ fichier.nom }}</td>
+              <td>{{ fichier.type }}</td>
+              <td>{{ formatFileSize(fichier.taille) }}</td>
+              <td>{{ formatDate(fichier.created_at) }}</td>
+              <td class="actions">
+                <button class="btn btn-info" (click)="download(fichier.id)">Télécharger</button>
+                <button class="btn btn-secondary" (click)="edit(fichier.id)">Modifier</button>
+                <button class="btn btn-danger" (click)="delete(fichier.id)">Supprimer</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="empty-state" *ngIf="fichiers.length === 0">
+          <p>Aucun fichier trouvé</p>
+        </div>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .container {
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+    
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+      margin-right: 8px;
+    }
+    
+    .btn-danger {
+      background-color: #dc3545;
+      color: white;
+    }
+    
+    .btn-info {
+      background-color: #17a2b8;
+      color: white;
+      margin-right: 8px;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 20px;
+      font-style: italic;
+    }
+    
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    
+    .table-container {
+      overflow-x: auto;
+    }
+    
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .data-table th,
+    .data-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .data-table th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+    }
+    
+    .data-table tr:hover {
+      background-color: #f5f5f5;
+    }
+    
+    .actions {
+      white-space: nowrap;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+      
+      .header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      
+      .table-container {
+        font-size: 14px;
+      }
+      
+      .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+    }
+  `]
+})
+export class FichiersListComponent implements OnInit {
+  fichiers: Fichier[] = [];
+  loading = false;
+  error: string | null = null;
+
+  constructor(
+    private fichierService: FichierService,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    this.loadFichiers();
+  }
+
+  loadFichiers(): void {
+    this.loading = true;
+    this.error = null;
+    
+    this.fichierService.getAll().subscribe({
+      next: (data) => {
+        this.fichiers = data;
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = 'Erreur lors du chargement des fichiers: ' + err.message;
+        this.loading = false;
+      }
+    });
+  }
+
+  createNew(): void {
+    this.router.navigate(['/fichiers/create']);
+  }
+
+  edit(id: number): void {
+    this.router.navigate(['/fichiers/edit', id]);
+  }
+
+  download(id: number): void {
+    this.fichierService.downloadFile(id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `fichier_${id}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        this.error = 'Erreur lors du téléchargement: ' + err.message;
+      }
+    });
+  }
+
+  delete(id: number): void {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce fichier?')) {
+      this.fichierService.delete(id).subscribe({
+        next: () => {
+          this.loadFichiers();
+        },
+        error: (err) => {
+          this.error = 'Erreur lors de la suppression: ' + err.message;
+        }
+      });
+    }
+  }
+
+  formatDate(dateString: string): string {
+    return new Date(dateString).toLocaleDateString('fr-FR');
+  }
+
+  formatFileSize(bytes?: number): string {
+    if (!bytes) return 'N/A';
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+  }
+}

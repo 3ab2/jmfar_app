@@ -1,0 +1,80 @@
+<div class="container mx-auto p-6">
+  <div class="max-w-2xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">Edit Ville</h1>
+      <a routerLink="/villes" class="text-gray-600 hover:text-gray-800">
+        ← Back to List
+      </a>
+    </div>
+
+    <div *ngIf="loading && !currentVille" class="text-center py-8">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <p class="mt-2 text-gray-600">Loading ville...</p>
+    </div>
+
+    <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+      {{ error }}
+    </div>
+
+    <div *ngIf="currentVille" class="bg-white shadow-lg rounded-lg p-6">
+      <form [formGroup]="villeForm" (ngSubmit)="onSubmit()">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label for="label" class="block text-sm font-medium text-gray-700 mb-2">
+              City Name *
+            </label>
+            <input
+              id="label"
+              type="text"
+              formControlName="label"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              [class.border-red-500]="submitted && f['label'].errors"
+              placeholder="e.g., Paris, New York, Douala"
+            />
+            <div *ngIf="submitted && f['label'].errors" class="text-red-500 text-sm mt-1">
+              <div *ngIf="f['label'].errors?.['required']">City name is required</div>
+              <div *ngIf="f['label'].errors?.['maxlength']">City name is too long</div>
+            </div>
+          </div>
+
+          <div>
+            <label for="pays_id" class="block text-sm font-medium text-gray-700 mb-2">
+              Country *
+            </label>
+            <select
+              id="pays_id"
+              formControlName="pays_id"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              [class.border-red-500]="submitted && f['pays_id'].errors"
+            >
+              <option value="">Select a country</option>
+              <option *ngFor="let pay of pays" [value]="pay.id">
+                {{ pay.nom }} ({{ pay.code }})
+              </option>
+            </select>
+            <div *ngIf="submitted && f['pays_id'].errors" class="text-red-500 text-sm mt-1">
+              <div *ngIf="f['pays_id'].errors?.['required']">Country is required</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 flex justify-end space-x-3">
+          <a
+            routerLink="/villes"
+            class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </a>
+          <button
+            type="submit"
+            [disabled]="loading"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span *ngIf="!loading">Update Ville</span>
+            <span *ngIf="loading">Updating...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

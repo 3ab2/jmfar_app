@@ -1,0 +1,43 @@
+<div class="container">
+  <h2>Armes Management</h2>
+  
+  <div class="actions">
+    <button (click)="createArme()" class="btn btn-primary">Create New Arme</button>
+  </div>
+
+  <div *ngIf="error" class="error">
+    {{ error }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    Loading...
+  </div>
+
+  <div *ngIf="!isLoading && !error" class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let arme of armes">
+          <td>{{ arme.id }}</td>
+          <td>{{ arme.nom }}</td>
+          <td>{{ arme.description || 'N/A' }}</td>
+          <td>
+            <button (click)="editArme(arme.id)" class="btn btn-secondary">Edit</button>
+            <button (click)="deleteArme(arme.id)" class="btn btn-danger">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <div *ngIf="armes.length === 0" class="no-data">
+      No armes found.
+    </div>
+  </div>
+</div>

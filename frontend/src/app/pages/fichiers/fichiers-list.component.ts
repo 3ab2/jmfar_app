@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FichierService } from '../../services/fichier.service';
@@ -15,11 +15,11 @@ import { Fichier } from '../../models';
         <button class="btn btn-primary" (click)="createNew()">Nouveau Fichier</button>
       </div>
       
-      <div class="loading" *ngIf="loading">Chargement...</div>
+      <div class="loading" *ngIf="isLoading">⏳ Chargement...</div>
       
       <div class="error" *ngIf="error">{{ error }}</div>
       
-      <div class="table-container" *ngIf="!loading && !error">
+      <div class="table-container" *ngIf="!isLoading && !error">
         <table class="data-table">
           <thead>
             <tr>
@@ -173,12 +173,13 @@ import { Fichier } from '../../models';
 })
 export class FichiersListComponent implements OnInit {
   fichiers: Fichier[] = [];
-  loading = false;
+  isLoading = true;
   error: string | null = null;
 
   constructor(
     private fichierService: FichierService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -186,17 +187,44 @@ export class FichiersListComponent implements OnInit {
   }
 
   loadFichiers(): void {
-    this.loading = true;
+    console.log('🚀 Début du chargement des fichiers...');
+    this.isLoading = true;
     this.error = null;
     
     this.fichierService.getAll().subscribe({
       next: (data) => {
-        this.fichiers = data;
-        this.loading = false;
+        console.log('📥 Données fichiers reçues:', data);
+        this.fichiers = Array.isArray(data) ? data : [];
+        console.log('✅ Fichiers stockés dans le composant:', this.fichiers);
+        console.log('📈 Nombre final de fichiers affichés:', this.fichiers.length);
+        
+        // Forcer isLoading à false IMMÉDIATEMENT
+        this.isLoading = false;
+        
+        // Forcer la détection de changement Angular
+        this.cdr.detectChanges();
+        
+        console.log('🔄 Loading status FORCÉ à false:', this.isLoading);
+        console.log('🔍 Template devrait maintenant afficher les données');
+        
+        if (this.fichiers.length === 0) {
+          console.log('⚠️ Aucun fichier à afficher - liste vide');
+        } else {
+          console.log('🎉 Fichiers chargés avec succès!');
+          console.log('🔍 Premier fichier détaillé:', this.fichiers[0]);
+        }
       },
       error: (err) => {
+        console.error('❌ Erreur complète lors du chargement des fichiers:', err);
+        console.error('📝 Détails de l\'erreur:', {
+          message: err.message,
+          status: err.status,
+          statusText: err.statusText,
+          url: err.url
+        });
         this.error = 'Erreur lors du chargement des fichiers: ' + err.message;
-        this.loading = false;
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -231,10 +259,12 @@ export class FichiersListComponent implements OnInit {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce fichier?')) {
       this.fichierService.delete(id).subscribe({
         next: () => {
+          console.log('✅ Fichier supprimé avec succès, rechargement de la liste...');
           this.loadFichiers();
         },
         error: (err) => {
-          this.error = 'Erreur lors de la suppression: ' + err.message;
+          console.error('❌ Erreur lors de la suppression du fichier:', err);
+          this.error = 'Erreur lors de la suppression du fichier: ' + err.message;
         }
       });
     }

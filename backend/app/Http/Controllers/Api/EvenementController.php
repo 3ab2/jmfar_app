@@ -17,6 +17,7 @@ class EvenementController extends Controller
      */
     public function index(): JsonResponse
     {
+        // Récupérer TOUS les événements
         $evenements = Evenement::with([
             'utilisateur',
             'typeEvenement', 
@@ -24,9 +25,14 @@ class EvenementController extends Controller
             'pay',
             'ville',
             'fichiers'
-        ])->get();
+        ])
+        ->get();
         
-        return response()->json($evenements);
+        // Retourner au format attendu par Angular
+        return response()->json([
+            'status' => 'success',
+            'data' => $evenements
+        ]);
     }
 
     /**

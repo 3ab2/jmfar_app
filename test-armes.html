@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Armes</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>Test API Armes</h1>
+    <button onclick="testArmes()">Tester l'API /api/armes</button>
+    <div id="result"></div>
+
+    <script>
+        async function testArmes() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result">Chargement...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/armes');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h3>✅ Succès - API fonctionne!</h3>
+                            <p><strong>Status:</strong> ${response.status}</p>
+                            <p><strong>Nombre d'armes:</strong> ${data.length}</p>
+                            <p><strong>Première arme:</strong> ${data[0]?.nom || 'N/A'}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>❌ Erreur HTTP</h3>
+                            <p><strong>Status:</strong> ${response.status}</p>
+                            <p><strong>Message:</strong> ${response.statusText}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Erreur de connexion</h3>
+                        <p><strong>Erreur:</strong> ${error.message}</p>
+                        <p>Vérifiez que le backend Laravel est démarré sur http://localhost:8000</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

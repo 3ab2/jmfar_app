@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { SousTypeEvenementService } from '../../services/sous-type-evenement.service';
 import { TypeEvenementService } from '../../services/type-evenement.service';
 import { SousTypeEvenement, TypeEvenement, UpdateSousTypeEvenementRequest } from '../../models';
@@ -10,64 +11,7 @@ import { SousTypeEvenement, TypeEvenement, UpdateSousTypeEvenementRequest } from
   selector: 'app-sous-type-evenement-edit',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  template: `
-    <div class="container">
-      <div class="header">
-        <h2>Modifier un Sous-Type d'Événement</h2>
-        <button class="btn btn-secondary" (click)="cancel()">Annuler</button>
-      </div>
-      
-      <div class="loading" *ngIf="loading">Chargement...</div>
-      
-      <div class="error" *ngIf="error">{{ error }}</div>
-      
-      <form class="form" (ngSubmit)="onSubmit()" *ngIf="!loading && sousTypeEvenement">
-        <div class="form-group">
-          <label for="label">Label *</label>
-          <input 
-            type="text" 
-            id="label" 
-            name="label" 
-            [(ngModel)]="formData.label" 
-            required
-            placeholder="Entrez le label du sous-type d'événement"
-          />
-        </div>
-        
-        <div class="form-group">
-          <label for="type_evenement_id">Type d'Événement *</label>
-          <select 
-            id="type_evenement_id" 
-            name="type_evenement_id" 
-            [(ngModel)]="formData.type_evenement_id" 
-            required
-          >
-            <option value="">Sélectionnez un type d'événement</option>
-            <option 
-              *ngFor="let type of typeEvenements" 
-              [value]="type.id"
-              [selected]="type.id === sousTypeEvenement.type_evenement_id"
-            >
-              {{ type.label }}
-            </option>
-          </select>
-        </div>
-        
-        <div class="form-info">
-          <p><strong>ID:</strong> {{ sousTypeEvenement.id }}</p>
-          <p><strong>Créé le:</strong> {{ formatDate(sousTypeEvenement.created_at) }}</p>
-          <p><strong>Modifié le:</strong> {{ formatDate(sousTypeEvenement.updated_at) }}</p>
-        </div>
-        
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary" [disabled]="saving">
-            {{ saving ? 'Modification...' : 'Modifier' }}
-          </button>
-          <button type="button" class="btn btn-secondary" (click)="cancel()">Annuler</button>
-        </div>
-      </form>
-    </div>
-  `,
+  templateUrl: './sous-type-evenement-edit.component.html',
   styles: [`
     .container {
       padding: 20px;
@@ -111,12 +55,42 @@ import { SousTypeEvenement, TypeEvenement, UpdateSousTypeEvenementRequest } from
       font-style: italic;
     }
     
+    .loading-spinner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
     .error {
       background-color: #f8d7da;
       color: #721c24;
       padding: 12px;
       border-radius: 4px;
       margin-bottom: 20px;
+    }
+    
+    .error-icon {
+      font-size: 20px;
+      margin-bottom: 5px;
+    }
+    
+    .error-content {
+      font-weight: 500;
     }
     
     .form {
@@ -201,7 +175,7 @@ export class SousTypeEvenementEditComponent implements OnInit {
     type_evenement_id: 0
   };
   typeEvenements: TypeEvenement[] = [];
-  loading = false;
+  isLoading = true;
   saving = false;
   error: string | null = null;
 
@@ -209,7 +183,8 @@ export class SousTypeEvenementEditComponent implements OnInit {
     private sousTypeEvenementService: SousTypeEvenementService,
     private typeEvenementService: TypeEvenementService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -217,59 +192,94 @@ export class SousTypeEvenementEditComponent implements OnInit {
     if (id) {
       this.loadData(+id);
     } else {
-      this.error = 'ID non valide';
+      this.error = 'ID de sous-type d\'événement invalide';
+      this.isLoading = false;
+      this.cdr.detectChanges();
     }
   }
 
   loadData(id: number): void {
-    this.loading = true;
+    console.log('🚀 Début du chargement des données pour édition sous-type d\'événement ID:', id);
+    this.isLoading = true;
     this.error = null;
 
-    // Load both sous-type and types in parallel
-    this.sousTypeEvenementService.getById(id).subscribe({
-      next: (sousType) => {
-        this.sousTypeEvenement = sousType;
-        this.formData.label = sousType.label;
-        this.formData.type_evenement_id = sousType.type_evenement_id;
-        this.loading = false;
+    // Load both sous-type and types in parallel using forkJoin
+    forkJoin({
+      sousType: this.sousTypeEvenementService.getById(id),
+      types: this.typeEvenementService.getAll()
+    }).subscribe({
+      next: (results) => {
+        console.log('📥 Données reçues pour édition:', results);
+        
+        // Assigner le sous-type d'événement
+        this.sousTypeEvenement = results.sousType;
+        
+        // Préremplir le formulaire
+        this.formData.label = results.sousType.label;
+        this.formData.type_evenement_id = results.sousType.type_evenement_id;
+        
+        // Assigner les types d'événements
+        this.typeEvenements = Array.isArray(results.types) ? results.types : [];
+        
+        // Forcer isLoading à false IMMÉDIATEMENT
+        this.isLoading = false;
+        
+        // Forcer la détection de changement Angular
+        this.cdr.detectChanges();
+        
+        console.log('✅ Sous-type d\'événement chargé avec succès!');
+        console.log('📋 Sous-type:', this.sousTypeEvenement?.label);
+        console.log('🏷️ Types d\'événements disponibles:', this.typeEvenements.length);
+        console.log('🔄 Loading status FORCÉ à false:', this.isLoading);
+        console.log('🔍 Template devrait maintenant afficher le formulaire avec les données');
       },
       error: (err) => {
-        this.error = 'Erreur lors du chargement: ' + err.message;
-        this.loading = false;
-      }
-    });
-
-    this.typeEvenementService.getAll().subscribe({
-      next: (types) => {
-        this.typeEvenements = types;
-      },
-      error: (err) => {
-        console.error('Erreur lors du chargement des types d\'événements:', err);
+        console.error('❌ Erreur lors du chargement des données:', err);
+        this.error = 'Erreur lors du chargement des données: ' + err.message;
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
   onSubmit(): void {
     if (!this.sousTypeEvenement || !this.formData.label?.trim()) {
+      console.log('⚠️ Formulaire invalide: sous-type ou label manquant');
       this.error = 'Le label est obligatoire';
       return;
     }
 
     if (!this.formData.type_evenement_id) {
+      console.log('⚠️ Formulaire invalide: type d\'événement non sélectionné');
       this.error = 'Le type d\'événement est obligatoire';
       return;
     }
 
+    console.log('🚀 Début de la modification du sous-type d\'événement...');
+    console.log('📝 Données du formulaire:', this.formData);
+    
+    // Convertir type_evenement_id en nombre pour éviter l'erreur 500
+    const updateData = {
+      ...this.formData,
+      type_evenement_id: +this.formData.type_evenement_id
+    };
+    
+    console.log('📝 Données converties pour l\'API:', updateData);
+    
     this.saving = true;
     this.error = null;
 
-    this.sousTypeEvenementService.update(this.sousTypeEvenement.id, this.formData).subscribe({
+    this.sousTypeEvenementService.update(this.sousTypeEvenement.id, updateData).subscribe({
       next: () => {
+        console.log('✅ Sous-type d\'événement modifié avec succès');
+        this.saving = false;
         this.router.navigate(['/sous-type-evenements']);
       },
       error: (err) => {
-        this.error = 'Erreur lors de la modification: ' + err.message;
+        console.error('❌ Erreur lors de la modification du sous-type d\'événement:', err);
+        this.error = 'Erreur lors de la modification du sous-type d\'événement: ' + err.message;
         this.saving = false;
+        this.cdr.detectChanges();
       }
     });
   }

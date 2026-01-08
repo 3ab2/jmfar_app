@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { Evenement, CreateEvenementRequest, UpdateEvenementRequest, Fichier } from '../models';
 
@@ -13,7 +14,27 @@ export class EvenementService {
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<Evenement[]> {
-    return this.http.get<Evenement[]>(`${this.apiUrl}/evenements`);
+    return this.http.get<any>(`${this.apiUrl}/evenements`).pipe(
+      map(response => {
+        console.log('Réponse complète de l\'API evenements:', response);
+        console.log('Type de la réponse:', typeof response);
+        console.log('Structure de la réponse:', response);
+        
+        // Handle Laravel response format: {status: 'success', data: [...]}
+        if (response && response.status === 'success' && Array.isArray(response.data)) {
+          console.log('Format Laravel détecté - extraction des données depuis response.data');
+          console.log('Nombre d\'événements reçus:', response.data.length);
+          return response.data;
+        }
+        
+        // Handle fallback: direct array or {data: [...]} format
+        const result = response.data || response;
+        console.log('Format fallback utilisé - données:', result);
+        console.log('Nombre d\'événements (fallback):', Array.isArray(result) ? result.length : 'Not an array');
+        
+        return Array.isArray(result) ? result : [];
+      })
+    );
   }
 
   getById(id: number): Observable<Evenement> {

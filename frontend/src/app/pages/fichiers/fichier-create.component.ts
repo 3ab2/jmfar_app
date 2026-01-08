@@ -16,11 +16,11 @@ import { Fichier, CreateFichierRequest, UpdateFichierRequest } from '../../model
         <button class="btn btn-secondary" (click)="cancel()">Annuler</button>
       </div>
       
-      <div class="loading" *ngIf="loading">Chargement...</div>
+      <div class="isLoading" *ngIf="isLoading">Chargement...</div>
       
       <div class="error" *ngIf="error">{{ error }}</div>
       
-      <div class="upload-section" *ngIf="!loading">
+      <div class="upload-section" *ngIf="!isLoading">
         <div class="form-group">
           <label for="file">Sélectionner un fichier *</label>
           <input 
@@ -62,8 +62,8 @@ import { Fichier, CreateFichierRequest, UpdateFichierRequest } from '../../model
         </div>
         
         <div class="form-actions" *ngIf="selectedFile">
-          <button class="btn btn-primary" (click)="uploadFile()" [disabled]="uploading">
-            {{ uploading ? 'Téléchargement...' : 'Télécharger' }}
+          <button class="btn btn-primary" (click)="uploadFile()" [disabled]="upisLoading">
+            {{ upisLoading ? 'Téléchargement...' : 'Télécharger' }}
           </button>
           <button class="btn btn-secondary" (click)="cancel()">Annuler</button>
         </div>
@@ -107,7 +107,7 @@ import { Fichier, CreateFichierRequest, UpdateFichierRequest } from '../../model
       cursor: not-allowed;
     }
     
-    .loading {
+    .isLoading {
       text-align: center;
       padding: 20px;
       font-style: italic;
@@ -219,8 +219,8 @@ export class FichierCreateComponent implements OnInit {
     nom: '',
     description: ''
   };
-  loading = false;
-  uploading = false;
+  isLoading = false;
+  upisLoading = false;
   error: string | null = null;
 
   constructor(
@@ -245,7 +245,7 @@ export class FichierCreateComponent implements OnInit {
       return;
     }
 
-    this.uploading = true;
+    this.upisLoading = true;
     this.error = null;
 
     this.fichierService.uploadFile(this.selectedFile).subscribe({
@@ -262,7 +262,7 @@ export class FichierCreateComponent implements OnInit {
             },
             error: (err) => {
               this.error = 'Fichier téléchargé mais erreur lors de la mise à jour: ' + err.message;
-              this.uploading = false;
+              this.upisLoading = false;
             }
           });
         } else {
@@ -271,7 +271,7 @@ export class FichierCreateComponent implements OnInit {
       },
       error: (err) => {
         this.error = 'Erreur lors du téléchargement: ' + err.message;
-        this.uploading = false;
+        this.upisLoading = false;
       }
     });
   }

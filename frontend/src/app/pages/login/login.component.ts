@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -19,7 +19,8 @@ export class LoginComponent {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   onSubmit(): void {
@@ -34,8 +35,12 @@ export class LoginComponent {
     this.authService.login(this.email, this.password).subscribe({
       next: (response) => {
         console.log('Login successful:', response);
-        // Rediriger vers la page CRUD des événements après login réussi
-        this.router.navigate(['/evenements']);
+        
+        // Récupérer le returnUrl des queryParams ou rediriger vers evenements par défaut
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/evenements';
+        console.log('Redirecting to:', returnUrl);
+        
+        this.router.navigate([returnUrl]);
       },
       error: (error) => {
         console.error('Login error:', error);

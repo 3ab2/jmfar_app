@@ -1,0 +1,70 @@
+<div class="container">
+  <div class="header">
+    <h2>Modifier l'Unité</h2>
+    <button class="btn btn-secondary" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i> Retour
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement...</p>
+  </div>
+
+  <form *ngIf="unite && !isLoading" (ngSubmit)="onSubmit()" class="form">
+    <div class="form-group">
+      <label for="nom">Nom *</label>
+      <input 
+        type="text" 
+        id="nom" 
+        name="nom" 
+        [(ngModel)]="unite.nom" 
+        required 
+        [disabled]="isLoading"
+        placeholder="Nom de l'unité"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea 
+        id="description" 
+        name="description" 
+        [(ngModel)]="unite.description" 
+        [disabled]="isLoading"
+        rows="4"
+        placeholder="Description de l'unité"
+      ></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="arme_id">Arme *</label>
+      <select 
+        id="arme_id" 
+        name="arme_id" 
+        [(ngModel)]="unite.arme_id" 
+        required 
+        [disabled]="isLoading"
+      >
+        <option value="">Sélectionner une arme</option>
+        <option *ngFor="let arme of armes" [value]="arme.id">
+          {{ arme.nom }}
+        </option>
+      </select>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" (click)="goBack()" [disabled]="isLoading">
+        Annuler
+      </button>
+      <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+        <span *ngIf="!isLoading">Mettre à jour</span>
+        <span *ngIf="isLoading">Mise à jour en cours...</span>
+      </button>
+    </div>
+  </form>
+</div>

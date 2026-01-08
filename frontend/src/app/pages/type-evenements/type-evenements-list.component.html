@@ -1,0 +1,57 @@
+<div class="container">
+  <div class="header">
+    <h2>Types d'Événements</h2>
+    <button class="btn btn-primary" (click)="createNew()">Nouveau Type</button>
+  </div>
+  
+  <!-- État de chargement -->
+  <div class="loading" *ngIf="isLoading">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>⏳ Chargement des types d'événements...</p>
+    </div>
+  </div>
+  
+  <!-- Message d'erreur -->
+  <div class="error" *ngIf="error">
+    <div class="error-icon">❌</div>
+    <div class="error-content">
+      <strong>Erreur:</strong> {{ error }}
+    </div>
+  </div>
+  
+  <!-- État vide -->
+  <div class="empty-state" *ngIf="!isLoading && !error && typeEvenements.length === 0">
+    <div class="empty-icon">📋</div>
+    <h3>Aucun type d'événement trouvé</h3>
+    <p>Commencez par ajouter votre premier type d'événement</p>
+    <button class="btn btn-primary" (click)="createNew()">Ajouter un type</button>
+  </div>
+  
+  <!-- Liste des types d'événements -->
+  <div class="table-container" *ngIf="!isLoading && !error && typeEvenements.length > 0">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Label</th>
+          <th>Créé le</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let type of typeEvenements">
+          <td>{{ type.id }}</td>
+          <td>
+            <span class="label-badge">{{ type.label }}</span>
+          </td>
+          <td>{{ formatDate(type.created_at) }}</td>
+          <td class="actions">
+            <button class="btn btn-secondary" (click)="edit(type.id)">Modifier</button>
+            <button class="btn btn-danger" (click)="delete(type.id)">Supprimer</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

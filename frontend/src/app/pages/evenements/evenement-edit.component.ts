@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -20,11 +20,21 @@ import { Evenement, TypeEvenement, SousTypeEvenement, Pay, Ville, UpdateEvenemen
         <button class="btn btn-secondary" (click)="cancel()">Annuler</button>
       </div>
       
-      <div class="loading" *ngIf="loading">Chargement...</div>
+      <div class="isLoading" *ngIf="isLoading">
+        <div class="isLoading-spinner">
+          <div class="spinner"></div>
+          <p>⏳ Chargement des données...</p>
+        </div>
+      </div>
       
-      <div class="error" *ngIf="error">{{ error }}</div>
+      <div class="error" *ngIf="error">
+        <div class="error-icon">❌</div>
+        <div class="error-content">
+          <strong>Erreur:</strong> {{ error }}
+        </div>
+      </div>
       
-      <form class="form" (ngSubmit)="onSubmit()" *ngIf="!loading && evenement">
+      <form class="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading && !error && evenement">
         <div class="form-row">
           <div class="form-group">
             <label for="reference">Référence *</label>
@@ -231,10 +241,31 @@ import { Evenement, TypeEvenement, SousTypeEvenement, Pay, Ville, UpdateEvenemen
       cursor: not-allowed;
     }
     
-    .loading {
+    .isLoading {
       text-align: center;
       padding: 20px;
       font-style: italic;
+    }
+    
+    .isLoading-spinner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
     
     .error {
@@ -243,6 +274,15 @@ import { Evenement, TypeEvenement, SousTypeEvenement, Pay, Ville, UpdateEvenemen
       padding: 12px;
       border-radius: 4px;
       margin-bottom: 20px;
+    }
+    
+    .error-icon {
+      font-size: 20px;
+      margin-bottom: 5px;
+    }
+    
+    .error-content {
+      font-weight: 500;
     }
     
     .form {
@@ -356,7 +396,7 @@ export class EvenementEditComponent implements OnInit {
   villes: Ville[] = [];
   filteredVilles: Ville[] = [];
   
-  loading = false;
+  isLoading = false;
   saving = false;
   error: string | null = null;
 
@@ -367,7 +407,8 @@ export class EvenementEditComponent implements OnInit {
     private payService: PayService,
     private villeService: VilleService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -380,75 +421,70 @@ export class EvenementEditComponent implements OnInit {
   }
 
   loadData(id: number): void {
-    this.loading = true;
+    this.isLoading = true;
     this.error = null;
+    
+    console.log('🚀 Début du chargement des données pour édition ID:', id);
 
-    // Load evenement data
-    this.evenementService.getById(id).subscribe({
-      next: (evenement) => {
-        this.evenement = evenement;
-        this.formData = {
-          reference: evenement.reference,
-          date_evenement: evenement.date_evenement,
-          titre: evenement.titre,
-          description: evenement.description || '',
-          adresse: evenement.adresse || '',
-          utilisateur_id: evenement.utilisateur_id,
-          type_evenement_id: evenement.type_evenement_id,
-          sous_type_evenement_id: evenement.sous_type_evenement_id,
-          pays_id: evenement.pays_id,
-          ville_id: evenement.ville_id
-        };
-        this.loading = false;
-      },
-      error: (err) => {
-        this.error = 'Erreur lors du chargement de l\'événement: ' + err.message;
-        this.loading = false;
-      }
-    });
-
-    // Load reference data in parallel
-    this.typeEvenementService.getAll().subscribe({
-      next: (data) => {
-        this.typeEvenements = data;
-      },
-      error: (err) => {
-        console.error('Erreur lors du chargement des types d\'événements:', err);
-      }
-    });
-
-    this.sousTypeEvenementService.getAll().subscribe({
-      next: (data) => {
-        this.sousTypeEvenements = data;
-      },
-      error: (err) => {
-        console.error('Erreur lors du chargement des sous-types d\'événements:', err);
-      }
-    });
-
-    this.payService.getAll().subscribe({
-      next: (data) => {
-        this.pays = data;
-      },
-      error: (err) => {
-        console.error('Erreur lors du chargement des pays:', err);
-      }
-    });
-
-    this.villeService.getAll().subscribe({
-      next: (data) => {
-        this.villes = data;
-        // Initialize filtered data after evenement is loaded
-        setTimeout(() => {
-          if (this.evenement) {
-            this.onTypeChange();
-            this.onPayChange();
-          }
-        }, 100);
-      },
-      error: (err) => {
-        console.error('Erreur lors du chargement des villes:', err);
-      }
+    // Load all data in parallel using forkJoin
+    import('rxjs').then(({ forkJoin }) => {
+      forkJoin({
+        evenement: this.evenementService.getById(id),
+        typeEvenements: this.typeEvenementService.getAll(),
+        sousTypeEvenements: this.sousTypeEvenementService.getAll(),
+        pays: this.payService.getAll(),
+        villes: this.villeService.getAll()
+      }).subscribe({
+        next: (results) => {
+          console.log('📥 Toutes les données reçues pour édition:', results);
+          
+          // Assigner l'événement et le formulaire
+          this.evenement = results.evenement;
+          this.formData = {
+            reference: results.evenement.reference,
+            date_evenement: results.evenement.date_evenement,
+            titre: results.evenement.titre,
+            description: results.evenement.description || '',
+            adresse: results.evenement.adresse || '',
+            utilisateur_id: results.evenement.utilisateur_id,
+            type_evenement_id: results.evenement.type_evenement_id,
+            sous_type_evenement_id: results.evenement.sous_type_evenement_id,
+            pays_id: results.evenement.pays_id,
+            ville_id: results.evenement.ville_id
+          };
+          
+          // Assigner les données de référence
+          this.typeEvenements = Array.isArray(results.typeEvenements) ? results.typeEvenements : [];
+          this.sousTypeEvenements = Array.isArray(results.sousTypeEvenements) ? results.sousTypeEvenements : [];
+          this.pays = Array.isArray(results.pays) ? results.pays : [];
+          this.villes = Array.isArray(results.villes) ? results.villes : [];
+          
+          // Forcer isLoading à false IMMÉDIATEMENT
+          this.isLoading = false;
+          
+          // Forcer la détection de changement Angular
+          this.cdr.detectChanges();
+          
+          // Initialiser les filtres après que tout soit chargé
+          this.onTypeChange();
+          this.onPayChange();
+          
+          console.log('✅ Données d\'édition chargées avec succès!');
+          console.log('📋 Événement:', this.evenement?.titre);
+          console.log('📈 Types:', this.typeEvenements.length);
+          console.log('🏷️ Sous-types:', this.sousTypeEvenements.length);
+          console.log('🌍 Pays:', this.pays.length);
+          console.log('🏙️ Villes:', this.villes.length);
+          console.log('🔄 Loading status FORCÉ à false:', this.isLoading);
+          console.log('🔍 Template devrait maintenant afficher le formulaire avec les données');
+        },
+        error: (err) => {
+          console.error('❌ Erreur lors du chargement des données:', err);
+          this.error = 'Erreur lors du chargement des données: ' + err.message;
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
+      });
     });
   }
 

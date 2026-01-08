@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { TypeEvenementService } from '../../services/type-evenement.service';
@@ -8,46 +8,7 @@ import { TypeEvenement } from '../../models';
   selector: 'app-type-evenements-list',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="container">
-      <div class="header">
-        <h2>Types d'Événements</h2>
-        <button class="btn btn-primary" (click)="createNew()">Nouveau Type</button>
-      </div>
-      
-      <div class="loading" *ngIf="loading">Chargement...</div>
-      
-      <div class="error" *ngIf="error">{{ error }}</div>
-      
-      <div class="table-container" *ngIf="!loading && !error">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Label</th>
-              <th>Créé le</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let type of typeEvenements">
-              <td>{{ type.id }}</td>
-              <td>{{ type.label }}</td>
-              <td>{{ formatDate(type.created_at) }}</td>
-              <td class="actions">
-                <button class="btn btn-secondary" (click)="edit(type.id)">Modifier</button>
-                <button class="btn btn-danger" (click)="delete(type.id)">Supprimer</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        
-        <div class="empty-state" *ngIf="typeEvenements.length === 0">
-          <p>Aucun type d'événement trouvé</p>
-        </div>
-      </div>
-    </div>
-  `,
+  templateUrl: './type-evenements-list.component.html',
   styles: [`
     .container {
       padding: 20px;
@@ -92,12 +53,42 @@ import { TypeEvenement } from '../../models';
       font-style: italic;
     }
     
+    .loading-spinner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
     .error {
       background-color: #f8d7da;
       color: #721c24;
       padding: 12px;
       border-radius: 4px;
       margin-bottom: 20px;
+    }
+    
+    .error-icon {
+      font-size: 20px;
+      margin-bottom: 5px;
+    }
+    
+    .error-content {
+      font-weight: 500;
     }
     
     .table-container {
@@ -137,6 +128,20 @@ import { TypeEvenement } from '../../models';
       color: #666;
     }
     
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    
+    .label-badge {
+      background-color: #e3f2fd;
+      color: #1976d2;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
     @media (max-width: 768px) {
       .container {
         padding: 10px;
@@ -162,12 +167,13 @@ import { TypeEvenement } from '../../models';
 })
 export class TypeEvenementsListComponent implements OnInit {
   typeEvenements: TypeEvenement[] = [];
-  loading = false;
+  isLoading = true;
   error: string | null = null;
 
   constructor(
     private typeEvenementService: TypeEvenementService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -175,17 +181,44 @@ export class TypeEvenementsListComponent implements OnInit {
   }
 
   loadTypeEvenements(): void {
-    this.loading = true;
+    console.log('🚀 Début du chargement des types d\'événements...');
+    this.isLoading = true;
     this.error = null;
     
     this.typeEvenementService.getAll().subscribe({
       next: (data) => {
-        this.typeEvenements = data;
-        this.loading = false;
+        console.log('📥 Données types d\'événements reçues:', data);
+        this.typeEvenements = Array.isArray(data) ? data : [];
+        console.log('✅ Types d\'événements stockés dans le composant:', this.typeEvenements);
+        console.log('📈 Nombre final de types d\'événements affichés:', this.typeEvenements.length);
+        
+        // Forcer isLoading à false IMMÉDIATEMENT
+        this.isLoading = false;
+        
+        // Forcer la détection de changement Angular
+        this.cdr.detectChanges();
+        
+        console.log('🔄 Loading status FORCÉ à false:', this.isLoading);
+        console.log('🔍 Template devrait maintenant afficher les données');
+        
+        if (this.typeEvenements.length === 0) {
+          console.log('⚠️ Aucun type d\'événement à afficher - liste vide');
+        } else {
+          console.log('🎉 Types d\'événements chargés avec succès!');
+          console.log('🔍 Premier type d\'événement détaillé:', this.typeEvenements[0]);
+        }
       },
       error: (err) => {
+        console.error('❌ Erreur complète lors du chargement des types d\'événements:', err);
+        console.error('📝 Détails de l\'erreur:', {
+          message: err.message,
+          status: err.status,
+          statusText: err.statusText,
+          url: err.url
+        });
         this.error = 'Erreur lors du chargement des types d\'événements: ' + err.message;
-        this.loading = false;
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -202,10 +235,12 @@ export class TypeEvenementsListComponent implements OnInit {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce type d\'événement?')) {
       this.typeEvenementService.delete(id).subscribe({
         next: () => {
+          console.log('✅ Type d\'événement supprimé avec succès, rechargement de la liste...');
           this.loadTypeEvenements();
         },
         error: (err) => {
-          this.error = 'Erreur lors de la suppression: ' + err.message;
+          console.error('❌ Erreur lors de la suppression du type d\'événement:', err);
+          this.error = 'Erreur lors de la suppression du type d\'événement: ' + err.message;
         }
       });
     }

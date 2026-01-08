@@ -1,27 +1,33 @@
 <div class="container mx-auto p-6">
   <div class="max-w-2xl mx-auto">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold text-gray-800">Edit Utilisateur</h1>
+      <h1 class="text-3xl font-bold text-gray-800">Modifier un Utilisateur</h1>
       <a routerLink="/utilisateurs" class="text-gray-600 hover:text-gray-800">
-        ← Back to List
+        ← Retour à la liste
       </a>
     </div>
 
-    <div *ngIf="loading && !currentUtilisateur" class="text-center py-8">
+    <!-- État de chargement -->
+    <div *ngIf="isLoading" class="text-center py-8">
       <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      <p class="mt-2 text-gray-600">Loading utilisateur...</p>
+      <p class="mt-2 text-gray-600">⏳ Chargement des données...</p>
     </div>
 
+    <!-- Message d'erreur -->
     <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-      {{ error }}
+      <div class="flex items-center">
+        <span class="mr-2">❌</span>
+        <span>{{ error }}</span>
+      </div>
     </div>
 
-    <div *ngIf="currentUtilisateur" class="bg-white shadow-lg rounded-lg p-6">
+    <!-- Formulaire -->
+    <div *ngIf="!isLoading && currentUtilisateur" class="bg-white shadow-lg rounded-lg p-6">
       <form [formGroup]="utilisateurForm" (ngSubmit)="onSubmit()">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label for="nom" class="block text-sm font-medium text-gray-700 mb-2">
-              Name *
+              Nom *
             </label>
             <input
               id="nom"
@@ -31,8 +37,8 @@
               [class.border-red-500]="submitted && f['nom'].errors"
             />
             <div *ngIf="submitted && f['nom'].errors" class="text-red-500 text-sm mt-1">
-              <div *ngIf="f['nom'].errors?.['required']">Name is required</div>
-              <div *ngIf="f['nom'].errors?.['maxlength']">Name is too long</div>
+              <div *ngIf="f['nom'].errors?.['required']">Le nom est requis</div>
+              <div *ngIf="f['nom'].errors?.['maxlength']">Le nom est trop long</div>
             </div>
           </div>
 
@@ -48,14 +54,14 @@
               [class.border-red-500]="submitted && f['email'].errors"
             />
             <div *ngIf="submitted && f['email'].errors" class="text-red-500 text-sm mt-1">
-              <div *ngIf="f['email'].errors?.['required']">Email is required</div>
-              <div *ngIf="f['email'].errors?.['email']">Please enter a valid email</div>
+              <div *ngIf="f['email'].errors?.['required']">L'email est requis</div>
+              <div *ngIf="f['email'].errors?.['email']">Veuillez entrer un email valide</div>
             </div>
           </div>
 
           <div>
             <label for="mot_de_passe" class="block text-sm font-medium text-gray-700 mb-2">
-              Password (leave empty to keep current)
+              Mot de passe (laisser vide pour conserver l'actuel)
             </label>
             <input
               id="mot_de_passe"
@@ -66,13 +72,13 @@
               placeholder="Enter new password"
             />
             <div *ngIf="submitted && f['mot_de_passe'].errors" class="text-red-500 text-sm mt-1">
-              <div *ngIf="f['mot_de_passe'].errors?.['minlength']">Password must be at least 6 characters</div>
+              <div *ngIf="f['mot_de_passe'].errors?.['minlength']">Le mot de passe doit contenir au moins 6 caractères</div>
             </div>
           </div>
 
           <div>
             <label for="role" class="block text-sm font-medium text-gray-700 mb-2">
-              Role *
+              Rôle *
             </label>
             <select
               id="role"
@@ -80,17 +86,17 @@
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               [class.border-red-500]="submitted && f['role'].errors"
             >
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
+              <option value="user">Utilisateur</option>
+              <option value="admin">Administrateur</option>
             </select>
             <div *ngIf="submitted && f['role'].errors" class="text-red-500 text-sm mt-1">
-              <div *ngIf="f['role'].errors?.['required']">Role is required</div>
+              <div *ngIf="f['role'].errors?.['required']">Le rôle est requis</div>
             </div>
           </div>
 
           <div>
             <label for="avatar" class="block text-sm font-medium text-gray-700 mb-2">
-              Avatar URL
+              URL de l'avatar
             </label>
             <input
               id="avatar"
@@ -103,7 +109,7 @@
 
           <div>
             <label for="unite_id" class="block text-sm font-medium text-gray-700 mb-2">
-              Unit ID *
+              ID de l'unité *
             </label>
             <input
               id="unite_id"
@@ -113,7 +119,7 @@
               [class.border-red-500]="submitted && f['unite_id'].errors"
             />
             <div *ngIf="submitted && f['unite_id'].errors" class="text-red-500 text-sm mt-1">
-              <div *ngIf="f['unite_id'].errors?.['required']">Unit ID is required</div>
+              <div *ngIf="f['unite_id'].errors?.['required']">L'ID de l'unité est requis</div>
             </div>
           </div>
         </div>
@@ -123,15 +129,15 @@
             routerLink="/utilisateurs"
             class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
           >
-            Cancel
+            Annuler
           </a>
           <button
             type="submit"
-            [disabled]="loading"
+            [disabled]="saving"
             class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span *ngIf="!loading">Update Utilisateur</span>
-            <span *ngIf="loading">Updating...</span>
+            <span *ngIf="!saving">Modifier l'utilisateur</span>
+            <span *ngIf="saving">Modification en cours...</span>
           </button>
         </div>
       </form>

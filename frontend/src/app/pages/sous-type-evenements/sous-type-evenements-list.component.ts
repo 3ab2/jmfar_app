@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { SousTypeEvenementService } from '../../services/sous-type-evenement.service';
 import { TypeEvenementService } from '../../services/type-evenement.service';
 import { SousTypeEvenement, TypeEvenement } from '../../models';
@@ -9,48 +10,7 @@ import { SousTypeEvenement, TypeEvenement } from '../../models';
   selector: 'app-sous-type-evenements-list',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="container">
-      <div class="header">
-        <h2>Sous-Types d'Événements</h2>
-        <button class="btn btn-primary" (click)="createNew()">Nouveau Sous-Type</button>
-      </div>
-      
-      <div class="loading" *ngIf="loading">Chargement...</div>
-      
-      <div class="error" *ngIf="error">{{ error }}</div>
-      
-      <div class="table-container" *ngIf="!loading && !error">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Label</th>
-              <th>Type d'Événement</th>
-              <th>Créé le</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let sousType of sousTypeEvenements">
-              <td>{{ sousType.id }}</td>
-              <td>{{ sousType.label }}</td>
-              <td>{{ getTypeEvenementLabel(sousType.type_evenement_id) }}</td>
-              <td>{{ formatDate(sousType.created_at) }}</td>
-              <td class="actions">
-                <button class="btn btn-secondary" (click)="edit(sousType.id)">Modifier</button>
-                <button class="btn btn-danger" (click)="delete(sousType.id)">Supprimer</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        
-        <div class="empty-state" *ngIf="sousTypeEvenements.length === 0">
-          <p>Aucun sous-type d'événement trouvé</p>
-        </div>
-      </div>
-    </div>
-  `,
+  templateUrl: './sous-type-evenements-list.component.html',
   styles: [`
     .container {
       padding: 20px;
@@ -95,12 +55,42 @@ import { SousTypeEvenement, TypeEvenement } from '../../models';
       font-style: italic;
     }
     
+    .loading-spinner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
     .error {
       background-color: #f8d7da;
       color: #721c24;
       padding: 12px;
       border-radius: 4px;
       margin-bottom: 20px;
+    }
+    
+    .error-icon {
+      font-size: 20px;
+      margin-bottom: 5px;
+    }
+    
+    .error-content {
+      font-weight: 500;
     }
     
     .table-container {
@@ -140,6 +130,29 @@ import { SousTypeEvenement, TypeEvenement } from '../../models';
       color: #666;
     }
     
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    
+    .label-badge {
+      background-color: #e3f2fd;
+      color: #1976d2;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .type-badge {
+      background-color: #f3e5f5;
+      color: #7b1fa2;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
     @media (max-width: 768px) {
       .container {
         padding: 10px;
@@ -166,13 +179,14 @@ import { SousTypeEvenement, TypeEvenement } from '../../models';
 export class SousTypeEvenementsListComponent implements OnInit {
   sousTypeEvenements: SousTypeEvenement[] = [];
   typeEvenements: TypeEvenement[] = [];
-  loading = false;
+  isLoading = true;
   error: string | null = null;
 
   constructor(
     private sousTypeEvenementService: SousTypeEvenementService,
     private typeEvenementService: TypeEvenementService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -180,27 +194,50 @@ export class SousTypeEvenementsListComponent implements OnInit {
   }
 
   loadData(): void {
-    this.loading = true;
+    console.log('🚀 Début du chargement des sous-types d\'événements...');
+    this.isLoading = true;
     this.error = null;
     
-    // Load both sous-types and types in parallel
-    this.sousTypeEvenementService.getAll().subscribe({
-      next: (sousTypes) => {
-        this.sousTypeEvenements = sousTypes;
-        this.loading = false;
+    // Load both sous-types and types in parallel using forkJoin
+    forkJoin({
+      sousTypes: this.sousTypeEvenementService.getAll(),
+      types: this.typeEvenementService.getAll()
+    }).subscribe({
+      next: (results) => {
+        console.log('📥 Données reçues:', results);
+        this.sousTypeEvenements = Array.isArray(results.sousTypes) ? results.sousTypes : [];
+        this.typeEvenements = Array.isArray(results.types) ? results.types : [];
+        console.log('✅ Sous-types d\'événements stockés:', this.sousTypeEvenements);
+        console.log('📈 Nombre de sous-types reçus:', this.sousTypeEvenements.length);
+        console.log('🏷️ Types d\'événements disponibles:', this.typeEvenements.length);
+        
+        // Forcer isLoading à false IMMÉDIATEMENT
+        this.isLoading = false;
+        
+        // Forcer la détection de changement Angular
+        this.cdr.detectChanges();
+        
+        console.log('🔄 Loading status FORCÉ à false:', this.isLoading);
+        console.log('🔍 Template devrait maintenant afficher les données');
+        
+        if (this.sousTypeEvenements.length === 0) {
+          console.log('⚠️ Aucun sous-type d\'événement à afficher - liste vide');
+        } else {
+          console.log('🎉 Sous-types d\'événements chargés avec succès!');
+          console.log('🔍 Premier sous-type détaillé:', this.sousTypeEvenements[0]);
+        }
       },
       error: (err) => {
+        console.error('❌ Erreur complète lors du chargement des sous-types d\'événements:', err);
+        console.error('📝 Détails de l\'erreur:', {
+          message: err.message,
+          status: err.status,
+          statusText: err.statusText,
+          url: err.url
+        });
         this.error = 'Erreur lors du chargement des sous-types d\'événements: ' + err.message;
-        this.loading = false;
-      }
-    });
-
-    this.typeEvenementService.getAll().subscribe({
-      next: (types) => {
-        this.typeEvenements = types;
-      },
-      error: (err) => {
-        console.error('Erreur lors du chargement des types d\'événements:', err);
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -222,10 +259,12 @@ export class SousTypeEvenementsListComponent implements OnInit {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce sous-type d\'événement?')) {
       this.sousTypeEvenementService.delete(id).subscribe({
         next: () => {
+          console.log('✅ Sous-type d\'événement supprimé avec succès, rechargement de la liste...');
           this.loadData();
         },
         error: (err) => {
-          this.error = 'Erreur lors de la suppression: ' + err.message;
+          console.error('❌ Erreur lors de la suppression du sous-type d\'événement:', err);
+          this.error = 'Erreur lors de la suppression du sous-type d\'événement: ' + err.message;
         }
       });
     }

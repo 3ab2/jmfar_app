@@ -1,0 +1,52 @@
+<div class="container">
+  <div class="header">
+    <h2>Liste des Unités</h2>
+    <button class="btn btn-primary" (click)="goToCreate()">
+      <i class="fas fa-plus"></i> Nouvelle Unité
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement...</p>
+  </div>
+
+  <div *ngIf="!isLoading && unites.length === 0" class="empty-state">
+    <p>Aucune unité trouvée</p>
+    <button class="btn btn-primary" (click)="goToCreate()">Créer la première unité</button>
+  </div>
+
+  <div *ngIf="!isLoading && unites.length > 0" class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nom</th>
+          <th>Description</th>
+          <th>Arme</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let unite of unites">
+          <td>{{ unite.id }}</td>
+          <td>{{ unite.nom }}</td>
+          <td>{{ unite.description || '-' }}</td>
+          <td>{{ unite.arme?.nom || '-' }}</td>
+          <td class="actions">
+            <button class="btn btn-sm btn-info" (click)="goToEdit(unite.id)" title="Modifier">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-sm btn-danger" (click)="deleteUnite(unite.id)" title="Supprimer">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

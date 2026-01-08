@@ -1,0 +1,45 @@
+<div class="container">
+  <div class="header">
+    <h2>Créer un Type d'Événement</h2>
+    <button class="btn btn-secondary" (click)="cancel()">Annuler</button>
+  </div>
+  
+  <!-- État de chargement -->
+  <div class="loading" *ngIf="isLoading">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>⏳ Chargement du formulaire...</p>
+    </div>
+  </div>
+  
+  <!-- Message d'erreur -->
+  <div class="error" *ngIf="error">
+    <div class="error-icon">❌</div>
+    <div class="error-content">
+      <strong>Erreur:</strong> {{ error }}
+    </div>
+  </div>
+  
+  <!-- Formulaire -->
+  <form class="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading && !error">
+    <div class="form-group">
+      <label for="label">Label *</label>
+      <input 
+        type="text" 
+        id="label" 
+        name="label" 
+        [(ngModel)]="formData.label" 
+        [ngModelOptions]="{standalone: true}"
+        required
+        placeholder="Entrez le label du type d'événement"
+      />
+    </div>
+    
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="saving">
+        {{ saving ? 'Création...' : 'Créer' }}
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="cancel()">Annuler</button>
+    </div>
+  </form>
+</div>

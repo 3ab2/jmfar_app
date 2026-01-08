@@ -6,18 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Evenement extends Model
 {
-    protected $fillable = [
-        'reference',
-        'date_evenement',
-        'titre',
-        'description',
-        'adresse',
-        'utilisateur_id',
-        'type_evenement_id',
-        'sous_type_evenement_id',
-        'pays_id',
-        'ville_id'
-    ];
+    // Autoriser tous les champs en assignation massive
+    protected $guarded = [];
+    
+    // Forcer le nom de la table si nécessaire
+    protected $table = 'evenements';
+    
+    // Désactiver les timestamps si non utilisés
+    public $timestamps = true;
 
     public function utilisateur()
     {

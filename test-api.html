@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API Sous-Type-Evenement</title>
+</head>
+<body>
+    <h1>Test API Sous-Type-Evenement</h1>
+    <button onclick="testAPI()">Tester l'appel API</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Test en cours...';
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/sous-types-evenement', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <h3>✅ Succès !</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Data:</strong> ${JSON.stringify(data, null, 2)}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h3>❌ Erreur</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Message:</strong> ${response.statusText}</p>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>❌ Erreur de connexion</h3>
+                    <p><strong>Erreur:</strong> ${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

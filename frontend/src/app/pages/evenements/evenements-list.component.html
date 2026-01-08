@@ -1,0 +1,72 @@
+<div class="container">
+  <div class="header">
+    <h2>📅 Événements</h2>
+    <button class="btn btn-primary" (click)="createNew()">
+      <span class="btn-icon">➕</span>
+      Nouvel Événement
+    </button>
+  </div>
+  
+  <!-- État de chargement -->
+  <div class="loading" *ngIf="isLoading">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>⏳ Chargement des événements...</p>
+    </div>
+  </div>
+  
+  <!-- Message d'erreur -->
+  <div class="error" *ngIf="error">
+    <div class="error-icon">❌</div>
+    <div class="error-content">
+      <strong>Erreur:</strong> {{ error }}
+    </div>
+  </div>
+  
+  <!-- Contenu principal - affiché dès que isLoading = false et pas d'erreur -->
+  <div class="content" *ngIf="!isLoading && !error">
+    
+    <!-- État vide -->
+    <div class="empty-state" *ngIf="evenements.length === 0">
+      <div class="empty-icon">📭</div>
+      <h3>Aucun événement</h3>
+      <p>Aucun événement trouvé. Créez votre premier événement !</p>
+    </div>
+    
+    <!-- Liste des événements -->
+    <div class="events-list" *ngIf="evenements.length > 0">
+      <div class="events-header">
+        <span class="event-count">
+          📊 {{ evenements.length }} événement{{ evenements.length > 1 ? 's' : '' }}
+        </span>
+      </div>
+      
+      <div class="events-grid">
+        <div *ngFor="let evt of evenements; trackBy: trackByEvenementId" class="event-card">
+          <div class="event-header">
+            <h4 class="event-title">{{ evt.titre || 'Sans titre' }}</h4>
+            <span class="event-ref">{{ evt.reference || 'N/A' }}</span>
+          </div>
+          
+          <div class="event-details">
+            <p class="event-description">
+              {{ evt.description ? (evt.description.length > 100 ? evt.description.substring(0, 100) + '...' : evt.description) : 'Aucune description' }}
+            </p>
+            
+            <div class="event-meta">
+              <span class="meta-item">📅 {{ formatDate(evt.date_evenement) }}</span>
+              <span class="meta-item">🏷️ {{ getTypeEvenementLabel(evt) }}</span>
+              <span class="meta-item">📍 {{ getVilleLabel(evt) }}</span>
+              <span class="meta-item">👤 {{ getUtilisateurLabel(evt) }}</span>
+            </div>
+          </div>
+          
+          <div class="event-actions">
+            <button class="btn btn-edit" (click)="edit(evt.id)" title="Modifier">✏️</button>
+            <button class="btn btn-delete" (click)="delete(evt.id)" title="Supprimer">🗑️</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

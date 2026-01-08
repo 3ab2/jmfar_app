@@ -13,23 +13,23 @@ export class SousTypeEvenementService {
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<SousTypeEvenement[]> {
-    return this.http.get<SousTypeEvenement[]>(`${this.apiUrl}/sous-type-evenements`);
+    return this.http.get<SousTypeEvenement[]>(`${this.apiUrl}/sous-types-evenement`);
   }
 
   getById(id: number): Observable<SousTypeEvenement> {
-    return this.http.get<SousTypeEvenement>(`${this.apiUrl}/sous-type-evenements/${id}`);
+    return this.http.get<SousTypeEvenement>(`${this.apiUrl}/sous-types-evenement/${id}`);
   }
 
   create(data: CreateSousTypeEvenementRequest): Observable<SousTypeEvenement> {
-    return this.http.post<SousTypeEvenement>(`${this.apiUrl}/sous-type-evenements`, data);
+    return this.http.post<SousTypeEvenement>(`${this.apiUrl}/sous-types-evenement`, data);
   }
 
   update(id: number, data: UpdateSousTypeEvenementRequest): Observable<SousTypeEvenement> {
-    return this.http.put<SousTypeEvenement>(`${this.apiUrl}/sous-type-evenements/${id}`, data);
+    return this.http.put<SousTypeEvenement>(`${this.apiUrl}/sous-types-evenement/${id}`, data);
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/sous-type-evenements/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/sous-types-evenement/${id}`);
   }
 
   getByTypeEvenementId(typeEvenementId: number): Observable<SousTypeEvenement[]> {

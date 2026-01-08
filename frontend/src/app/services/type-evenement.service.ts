@@ -13,22 +13,22 @@ export class TypeEvenementService {
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<TypeEvenement[]> {
-    return this.http.get<TypeEvenement[]>(`${this.apiUrl}/type-evenements`);
+    return this.http.get<TypeEvenement[]>(`${this.apiUrl}/types-evenement`);
   }
 
   getById(id: number): Observable<TypeEvenement> {
-    return this.http.get<TypeEvenement>(`${this.apiUrl}/type-evenements/${id}`);
+    return this.http.get<TypeEvenement>(`${this.apiUrl}/types-evenement/${id}`);
   }
 
   create(data: CreateTypeEvenementRequest): Observable<TypeEvenement> {
-    return this.http.post<TypeEvenement>(`${this.apiUrl}/type-evenements`, data);
+    return this.http.post<TypeEvenement>(`${this.apiUrl}/types-evenement`, data);
   }
 
   update(id: number, data: UpdateTypeEvenementRequest): Observable<TypeEvenement> {
-    return this.http.put<TypeEvenement>(`${this.apiUrl}/type-evenements/${id}`, data);
+    return this.http.put<TypeEvenement>(`${this.apiUrl}/types-evenement/${id}`, data);
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/type-evenements/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/types-evenement/${id}`);
   }
 }

@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ArmeService } from '../../services';
 import { CreateArmeRequest } from '../../models';
@@ -8,40 +8,73 @@ import { CreateArmeRequest } from '../../models';
 @Component({
   selector: 'app-arme-create',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './arme-create.component.html',
   styleUrl: './arme-create.component.css'
 })
-export class ArmeCreateComponent {
-  arme: CreateArmeRequest = {
-    nom: '',
-    description: ''
-  };
-  isLoading = false;
+export class ArmeCreateComponent implements OnInit {
+  armeForm: FormGroup;
+  isLoading = true;
+  saving = false;
   error: string | null = null;
+  submitted = false;
 
-  constructor(private armeService: ArmeService, private router: Router) {}
+  constructor(
+    private fb: FormBuilder,
+    private armeService: ArmeService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {
+    this.armeForm = this.fb.group({
+      nom: ['', [Validators.required, Validators.maxLength(255)]],
+      description: ['', Validators.maxLength(1000)]
+    });
+  }
+
+  ngOnInit(): void {
+    console.log('🚀 Initialisation du formulaire de création d\'arme...');
+    this.isLoading = true;
+    
+    // Le formulaire est prêt immédiatement pour les armes (pas de données de référence nécessaires)
+    setTimeout(() => {
+      this.isLoading = false;
+      this.cdr.detectChanges();
+      console.log('✅ Formulaire de création prêt');
+      console.log('🔄 Loading status FORCÉ à false:', this.isLoading);
+      console.log('🔍 Template devrait maintenant afficher le formulaire');
+    }, 100);
+  }
 
   onSubmit(): void {
-    if (!this.arme.nom.trim()) {
-      this.error = 'Name is required';
+    this.submitted = true;
+    this.error = null;
+
+    if (this.armeForm.invalid) {
+      console.log('⚠️ Formulaire invalide');
       return;
     }
 
-    this.isLoading = true;
-    this.error = null;
+    console.log('🚀 Début de la création de l\'arme...');
+    this.saving = true;
+    const armeData: CreateArmeRequest = this.armeForm.value;
 
-    this.armeService.create(this.arme).subscribe({
-      next: (response) => {
-        this.isLoading = false;
+    this.armeService.create(armeData).subscribe({
+      next: () => {
+        console.log('✅ Arme créée avec succès');
+        this.saving = false;
         this.router.navigate(['/armes']);
       },
       error: (err) => {
-        this.isLoading = false;
-        this.error = 'Failed to create arme';
-        console.error('Error creating arme:', err);
+        console.error('❌ Erreur lors de la création de l\'arme:', err);
+        this.error = 'Erreur lors de la création de l\'arme: ' + err.message;
+        this.saving = false;
+        this.cdr.detectChanges();
       }
     });
+  }
+
+  get f() {
+    return this.armeForm.controls;
   }
 
   cancel(): void {

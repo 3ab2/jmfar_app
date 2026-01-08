@@ -22,7 +22,29 @@ export class AuthService {
 
   private checkAuthStatus(): void {
     const token = this.getToken();
-    this.isAuthenticatedSubject.next(!!token);
+    if (!token) {
+      this.isAuthenticatedSubject.next(false);
+      return;
+    }
+    
+    // Vérifier si le token est expiré
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const isExpired = payload.exp * 1000 < Date.now();
+      
+      if (isExpired) {
+        this.removeToken();
+        this.removeUserData();
+        this.isAuthenticatedSubject.next(false);
+      } else {
+        this.isAuthenticatedSubject.next(true);
+      }
+    } catch (error) {
+      // Token invalide
+      this.removeToken();
+      this.removeUserData();
+      this.isAuthenticatedSubject.next(false);
+    }
   }
 
   login(email: string, password: string): Observable<any> {

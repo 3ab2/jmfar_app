@@ -6,7 +6,7 @@
     </a>
   </div>
 
-  <div *ngIf="loading" class="text-center py-8">
+  <div *ngIf="isLoading" class="text-center py-8">
     <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
     <p class="mt-2 text-gray-600">Loading utilisateurs...</p>
   </div>
@@ -15,7 +15,7 @@
     {{ error }}
   </div>
 
-  <div *ngIf="!loading && !error" class="bg-white shadow-lg rounded-lg overflow-hidden">
+  <div *ngIf="!isLoading && !error" class="bg-white shadow-lg rounded-lg overflow-hidden">
     <table class="min-w-full divide-y divide-gray-200">
       <thead class="bg-gray-50">
         <tr>

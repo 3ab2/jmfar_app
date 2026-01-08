@@ -25,7 +25,7 @@ class SousTypeEvenementController extends Controller
     {
         $validated = $request->validate([
             'label' => 'required|string|max:100',
-            'type_evenement_id' => 'required|integer|exists:type_evenements,id'
+            'type_evenement_id' => 'required|integer|exists:types_evenement,id'
         ]);
 
         $sousType = SousTypeEvenement::create($validated);
@@ -47,7 +47,7 @@ class SousTypeEvenementController extends Controller
     {
         $validated = $request->validate([
             'label' => 'sometimes|required|string|max:100',
-            'type_evenement_id' => 'sometimes|required|integer|exists:type_evenements,id'
+            'type_evenement_id' => 'sometimes|required|integer|exists:types_evenement,id'
         ]);
 
         $sousType->update($validated);

@@ -2,39 +2,59 @@
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-3xl font-bold text-gray-800">Pays</h1>
     <a routerLink="/pays/create" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-      Add New Pay
+      Ajouter un Pays
     </a>
   </div>
 
-  <div *ngIf="loading" class="text-center py-8">
+  <!-- État de chargement -->
+  <div *ngIf="isLoading" class="text-center py-8">
     <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-    <p class="mt-2 text-gray-600">Loading pays...</p>
+    <p class="mt-2 text-gray-600">⏳ Chargement des pays...</p>
   </div>
 
+  <!-- Message d'erreur -->
   <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-    {{ error }}
+    <div class="flex items-center">
+      <span class="mr-2">❌</span>
+      <span>{{ error }}</span>
+    </div>
   </div>
 
-  <div *ngIf="!loading && !error" class="bg-white shadow-lg rounded-lg overflow-hidden">
+  <!-- État vide -->
+  <div *ngIf="!isLoading && !error && pays.length === 0" class="text-center py-12 bg-gray-50 rounded-lg">
+    <div class="text-gray-400 text-6xl mb-4">🌍</div>
+    <h3 class="text-xl font-semibold text-gray-600 mb-2">Aucun pays trouvé</h3>
+    <p class="text-gray-500 mb-4">Commencez par ajouter votre premier pays</p>
+    <a routerLink="/pays/create" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-block">
+      Ajouter un pays
+    </a>
+  </div>
+
+  <!-- Liste des pays -->
+  <div *ngIf="!isLoading && !error && pays.length > 0" class="bg-white shadow-lg rounded-lg overflow-hidden">
     <table class="min-w-full divide-y divide-gray-200">
       <thead class="bg-gray-50">
         <tr>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cities</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Villes</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Créé le</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
         </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-200">
         <tr *ngFor="let pay of pays; trackBy: trackByFn">
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ pay.id }}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ pay.code }}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ pay.nom }}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+              {{ pay.code }}
+            </span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ pay.nom }}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-              {{ pay.villes?.length || 0 }} cities
+              {{ pay.villes?.length || 0 }} villes
             </span>
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -42,16 +62,12 @@
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
             <a routerLink="/pays/edit/{{ pay.id }}" 
-               class="text-indigo-600 hover:text-indigo-900">Edit</a>
+               class="text-indigo-600 hover:text-indigo-900 font-medium">Modifier</a>
             <button (click)="deletePay(pay.id)" 
-                    class="text-red-600 hover:text-red-900">Delete</button>
+                    class="text-red-600 hover:text-red-900 font-medium">Supprimer</button>
           </td>
         </tr>
       </tbody>
     </table>
-    
-    <div *ngIf="pays.length === 0" class="text-center py-8 text-gray-500">
-      No pays found.
-    </div>
   </div>
 </div>

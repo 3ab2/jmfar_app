@@ -1,4 +1,5 @@
 export * from './arme.service';
+export * from './unite.service';
 export * from './utilisateur.service';
 export * from './evenement.service';
 export * from './pay.service';

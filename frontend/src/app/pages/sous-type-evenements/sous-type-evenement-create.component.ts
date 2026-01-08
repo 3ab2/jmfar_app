@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -10,57 +10,7 @@ import { SousTypeEvenement, TypeEvenement, CreateSousTypeEvenementRequest } from
   selector: 'app-sous-type-evenement-create',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  template: `
-    <div class="container">
-      <div class="header">
-        <h2>Créer un Sous-Type d'Événement</h2>
-        <button class="btn btn-secondary" (click)="cancel()">Annuler</button>
-      </div>
-      
-      <div class="loading" *ngIf="loading">Chargement...</div>
-      
-      <div class="error" *ngIf="error">{{ error }}</div>
-      
-      <form class="form" (ngSubmit)="onSubmit()" *ngIf="!loading">
-        <div class="form-group">
-          <label for="label">Label *</label>
-          <input 
-            type="text" 
-            id="label" 
-            name="label" 
-            [(ngModel)]="formData.label" 
-            required
-            placeholder="Entrez le label du sous-type d'événement"
-          />
-        </div>
-        
-        <div class="form-group">
-          <label for="type_evenement_id">Type d'Événement *</label>
-          <select 
-            id="type_evenement_id" 
-            name="type_evenement_id" 
-            [(ngModel)]="formData.type_evenement_id" 
-            required
-          >
-            <option value="">Sélectionnez un type d'événement</option>
-            <option 
-              *ngFor="let type of typeEvenements" 
-              [value]="type.id"
-            >
-              {{ type.label }}
-            </option>
-          </select>
-        </div>
-        
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary" [disabled]="saving">
-            {{ saving ? 'Création...' : 'Créer' }}
-          </button>
-          <button type="button" class="btn btn-secondary" (click)="cancel()">Annuler</button>
-        </div>
-      </form>
-    </div>
-  `,
+  templateUrl: './sous-type-evenement-create.component.html',
   styles: [`
     .container {
       padding: 20px;
@@ -104,12 +54,42 @@ import { SousTypeEvenement, TypeEvenement, CreateSousTypeEvenementRequest } from
       font-style: italic;
     }
     
+    .loading-spinner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
     .error {
       background-color: #f8d7da;
       color: #721c24;
       padding: 12px;
       border-radius: 4px;
       margin-bottom: 20px;
+    }
+    
+    .error-icon {
+      font-size: 20px;
+      margin-bottom: 5px;
+    }
+    
+    .error-content {
+      font-weight: 500;
     }
     
     .form {
@@ -181,7 +161,7 @@ export class SousTypeEvenementCreateComponent implements OnInit {
     type_evenement_id: 0
   };
   typeEvenements: TypeEvenement[] = [];
-  loading = false;
+  isLoading = true;
   saving = false;
   error: string | null = null;
 
@@ -189,7 +169,8 @@ export class SousTypeEvenementCreateComponent implements OnInit {
     private sousTypeEvenementService: SousTypeEvenementService,
     private typeEvenementService: TypeEvenementService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -197,40 +178,105 @@ export class SousTypeEvenementCreateComponent implements OnInit {
   }
 
   loadTypeEvenements(): void {
-    this.loading = true;
+    console.log('🚀 Début du chargement des types d\'événements pour création...');
+    this.isLoading = true;
+    this.error = null;
+    
     this.typeEvenementService.getAll().subscribe({
       next: (data) => {
-        this.typeEvenements = data;
-        this.loading = false;
+        console.log('📥 Types d\'événements reçus:', data);
+        this.typeEvenements = Array.isArray(data) ? data : [];
+        console.log('✅ Types d\'événements chargés avec succès!');
+        console.log('🏷️ Nombre de types disponibles:', this.typeEvenements.length);
+        
+        // Forcer isLoading à false IMMÉDIATEMENT
+        this.isLoading = false;
+        
+        // Forcer la détection de changement Angular
+        this.cdr.detectChanges();
+        
+        console.log('✅ Formulaire prêt');
+        console.log('🔄 Loading status FORCÉ à false:', this.isLoading);
+        console.log('🔍 Template devrait maintenant afficher le formulaire');
+        
+        if (this.typeEvenements.length === 0) {
+          console.log('⚠️ Aucun type d\'événement disponible pour la création');
+        } else {
+          console.log('🎉 Types d\'événements disponibles pour la création!');
+          console.log('🔍 Premier type disponible:', this.typeEvenements[0]);
+        }
       },
       error: (err) => {
+        console.error('❌ Erreur lors du chargement des types d\'événements:', err);
         this.error = 'Erreur lors du chargement des types d\'événements: ' + err.message;
-        this.loading = false;
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
   onSubmit(): void {
     if (!this.formData.label.trim()) {
+      console.log('⚠️ Formulaire invalide: label vide');
       this.error = 'Le label est obligatoire';
       return;
     }
 
     if (!this.formData.type_evenement_id) {
+      console.log('⚠️ Formulaire invalide: type d\'événement non sélectionné');
       this.error = 'Le type d\'événement est obligatoire';
       return;
     }
 
+    console.log('🚀 Début de la création du sous-type d\'événement...');
+    console.log('📝 Données du formulaire:', this.formData);
+    
+    // Convertir type_evenement_id en nombre pour éviter l'erreur 500
+    const createData = {
+      ...this.formData,
+      type_evenement_id: +this.formData.type_evenement_id
+    };
+    
+    console.log('📝 Données converties pour l\'API:', createData);
+    console.log('🔗 URL de l\'API:', 'http://127.0.0.1:8000/api/sous-types-evenement');
+    console.log('📋 Type des données:', typeof createData.type_evenement_id);
+    
     this.saving = true;
     this.error = null;
 
-    this.sousTypeEvenementService.create(this.formData).subscribe({
-      next: () => {
+    this.sousTypeEvenementService.create(createData).subscribe({
+      next: (response) => {
+        console.log('✅ Sous-type d\'événement créé avec succès:', response);
+        this.saving = false;
         this.router.navigate(['/sous-type-evenements']);
       },
       error: (err) => {
-        this.error = 'Erreur lors de la création: ' + err.message;
+        console.error('❌ Erreur complète lors de la création:', err);
+        console.error('📝 Status:', err.status);
+        console.error('📝 StatusText:', err.statusText);
+        console.error('📝 URL:', err.url);
+        console.error('📝 Error body:', err.error);
+        console.error('📝 Headers:', err.headers);
+        
+        // Si c'est une erreur 500, essayer d\'extraire plus de détails
+        if (err.status === 500 && err.error) {
+          console.error('🔍 Détails de l\'erreur 500:');
+          if (typeof err.error === 'string') {
+            console.error('Message:', err.error);
+          } else if (err.error.message) {
+            console.error('Message backend:', err.error.message);
+          }
+          if (err.error.exception) {
+            console.error('Exception:', err.error.exception);
+          }
+          if (err.error.trace) {
+            console.error('Trace disponible (premières lignes):', err.error.trace.slice(0, 3));
+          }
+        }
+        
+        this.error = 'Erreur lors de la création du sous-type d\'événement: ' + err.message;
         this.saving = false;
+        this.cdr.detectChanges();
       }
     });
   }

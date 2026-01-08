@@ -16,11 +16,11 @@ import { Fichier, UpdateFichierRequest } from '../../models';
         <button class="btn btn-secondary" (click)="cancel()">Annuler</button>
       </div>
       
-      <div class="loading" *ngIf="loading">Chargement...</div>
+      <div class="isLoading" *ngIf="isLoading">Chargement...</div>
       
       <div class="error" *ngIf="error">{{ error }}</div>
       
-      <form class="form" (ngSubmit)="onSubmit()" *ngIf="!loading && fichier">
+      <form class="form" (ngSubmit)="onSubmit()" *ngIf="!isLoading && fichier">
         <div class="form-group">
           <label for="nom">Nom du fichier</label>
           <input 
@@ -115,7 +115,7 @@ import { Fichier, UpdateFichierRequest } from '../../models';
       cursor: not-allowed;
     }
     
-    .loading {
+    .isLoading {
       text-align: center;
       padding: 20px;
       font-style: italic;
@@ -211,7 +211,7 @@ export class FichierEditComponent implements OnInit {
     type: '',
     description: ''
   };
-  loading = false;
+  isLoading = false;
   saving = false;
   error: string | null = null;
 
@@ -231,7 +231,7 @@ export class FichierEditComponent implements OnInit {
   }
 
   loadFichier(id: number): void {
-    this.loading = true;
+    this.isLoading = true;
     this.error = null;
 
     this.fichierService.getById(id).subscribe({
@@ -242,11 +242,11 @@ export class FichierEditComponent implements OnInit {
           type: data.type || '',
           description: data.description || ''
         };
-        this.loading = false;
+        this.isLoading = false;
       },
       error: (err) => {
         this.error = 'Erreur lors du chargement: ' + err.message;
-        this.loading = false;
+        this.isLoading = false;
       }
     });
   }

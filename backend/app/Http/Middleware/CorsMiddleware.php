@@ -12,7 +12,7 @@ class CorsMiddleware
         $response = $next($request);
 
         $origin = $request->header('Origin');
-        if (preg_match('/^http:\/\/localhost:\d+$/', $origin)) {
+        if (preg_match('/^http:\/\/(localhost|127\.0\.0\.1):\d+$/', $origin)) {
             $response->headers->set('Access-Control-Allow-Origin', $origin);
         }
         

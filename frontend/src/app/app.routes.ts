@@ -40,9 +40,14 @@ import { VillesListComponent } from './pages/villes/villes-list.component';
 import { VilleCreateComponent } from './pages/villes/ville-create.component';
 import { VilleEditComponent } from './pages/villes/ville-edit.component';
 
+// Unite components
+import { UnitesListComponent } from './pages/unites/unites-list.component';
+import { UniteCreateComponent } from './pages/unites/unite-create.component';
+import { UniteEditComponent } from './pages/unites/unite-edit.component';
+
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  { path: '', redirectTo: '/evenements', pathMatch: 'full' },
   
   // Armes routes (existing)
   { path: 'armes', component: ArmesListComponent, canActivate: [AuthGuard] },
@@ -83,6 +88,11 @@ export const routes: Routes = [
   { path: 'villes', component: VillesListComponent, canActivate: [AuthGuard] },
   { path: 'villes/create', component: VilleCreateComponent, canActivate: [AuthGuard] },
   { path: 'villes/edit/:id', component: VilleEditComponent, canActivate: [AuthGuard] },
+  
+  // Unite routes
+  { path: 'unites', component: UnitesListComponent, canActivate: [AuthGuard] },
+  { path: 'unites/create', component: UniteCreateComponent, canActivate: [AuthGuard] },
+  { path: 'unites/edit/:id', component: UniteEditComponent, canActivate: [AuthGuard] },
   
   { path: '**', redirectTo: '/login' }
 ];
